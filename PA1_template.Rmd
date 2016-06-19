@@ -20,7 +20,6 @@ This portion of the code reads in data and remove NA values to give the total nu
 ```{r readindata}
 rawdata<-read.csv("activity.csv",sep=",")
 rawdata_NA<-na.omit(rawdata)
-rawdatato<-rawdata
 
 ```
 
@@ -35,14 +34,16 @@ interval_mean<-ddply(rawdata_NA,~interval,summarise,mean=mean(steps))
 **The mean for the total number of steps taken in a day is `r meandata` and the median steps is `r mediandata`**
 
 
-### Plot of total steps taken in a day
+### Plot of total steps taken in a day.
 
-```{r historgram, fig.width=10,fig.height=8,echo=TRUE}
-hist(date_sum$sum,xlab="No of steps",ylab="No of days",breaks=10,main="Histogram of Steps per day")
+```{r historgram, fig.width=13,fig.height=5,echo=FALSE}
+
+barplot(date_sum$sum,width=0.05,names.arg=date_sum$date,xlab="date",ylab="No of Steps")
+axis.Date(1,at=date_sum$date)
 ```
 
-### Plot of steps for time interval averaged over all the dates
-```{r intervalhist, fig.width=10,fig.height=8,echo=FALSE}
+### Plot of steps for time interval averaged over all the dates.
+```{r intervalhist, fig.width=13,fig.height=5,echo=FALSE}
 #barplot(interval_mean$mean,names.arg=interval_mean$interval,xlab="Interval",ylab="No of Steps")
 plot(interval_mean$interval,interval_mean$mean,type='n',xlab='Interval',ylab='No of steps')
 lines(interval_mean$interval,interval_mean$mean)
@@ -70,63 +71,12 @@ timemax<-interval_mean$interval[ini]
 **The total number of rows with NA is `r totalrow`. **
 
 ### This portion of code substitue the NA values with mean values
-```{r fillNA}
-indica<-data.frame(which(is.na(rawdatato)))
-tmpsto<-matrix(nrow=nrow(indica),ncol=2)
+
+indica<-data.frame(which(is.na(rawdata)))
+
+
 for (i in 1:nrow(indica))
 {
-tmpout<-rawdatato[indica[i,1],3]
-for (j in 1:nrow(interval_mean))
-if(interval_mean[j,1]==tmpout)
-{
-
-rawdatato[indica[i,1],1]=interval_mean[j,2]
-tmpsto[i,1]<-tmpout
-tmpsto[i,2]<-interval_mean[j,1]
+print(indica[i,1])
 }
 }
-```
-
-### This portion calculates the historgram, mean and median for the filled dataset
-```{r procmean2}
-date_sum2<-ddply(rawdatato,~date,summarise,sum=sum(steps))
-mediandata2<-median(date_sum2$sum)
-meandata2<-mean(date_sum2$sum)
-interval_mean2<-ddply(rawdatato,~interval,summarise,mean=mean(steps))
-```
-
-**The mean of rawdata with remove NA is `r meandata` vs `r meandata2` from filled data. **
-**The median of rawdata with remove NA is `r mediandata` vs ``r mediandata2` from filled data. **
-
-The impact of filling in data points is minimal to the mean and median for the total steps taken
-
-###  Histogram plot of total steps taken in a day with filled data
-```{r historgram2, fig.width=10,fig.height=8,echo=TRUE}
-
-hist(date_sum2$sum,xlab="No of steps",ylab="No of days",breaks=10,main="Histogram of Steps per day")
-```
-
-### This portion of the code adds the two factors of weekday and weekend to the data
-```{r procweekdays}
-rawdatato$day<-weekdays(as.Date(rawdatato$date))
-rawdatato$wek<-weekdays(as.Date(rawdatato$date))
-for (i in 1:nrow(rawdatato)){
-if(rawdatato$day[i]=="Sunday" || rawdatato$day[i]=="Saturday")
-{
-rawdatato$wek[i]<-"Weekend"  
-}
-else
-  {
-    rawdatato$wek[i]<-"Weekday"
-  }
-}
-
-rawdatamean<-ddply(rawdatato,.(interval,wek),summarise,step=mean(steps))
-```
-### This plot compares the average number of steps for Weekend and Weekday
-```{r lineplot, fig.width=10,fig.height=8,echo=TRUE}
-library(lattice)
-xyplot(step~interval|factor(wek),data=rawdatamean,layout=c(1,2),type="l",xlab="Interval",ylab="Number of steps",main="Plot of averaged steps for Weekend and Weekday")
-```
-
-**From the plots, it can be seen that there are more physical activities throughout the day.**
